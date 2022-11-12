@@ -58,15 +58,6 @@ class CSOFS:
 
 
 
-    def sigmoid(self, x: np.ndarray, parms: List[int]):
-        """
-        This function computes fuzzy membership values using a sigmoidal membership function
-        """
-
-        f = 1 / (1 + np.exp(-parms[0] * (x - parms[1])))
-
-        return f
-
 
 
 def main():
