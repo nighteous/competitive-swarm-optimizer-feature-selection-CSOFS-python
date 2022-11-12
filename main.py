@@ -18,6 +18,8 @@ from scipy.io import loadmat
 import numpy as np
 import numpy.matlib as matlib
 
+from fit_temp import func
+
 class CSOFS: 
     def __init__(self):
         sonar = loadmat("sonar.mat")
@@ -53,9 +55,10 @@ class CSOFS:
             feature = []
             for i in range(0, self.m):
                 feature = [idx for idx in range(len(bi_position[i])) if bi_position[i][idx] == 1]
-            print(feature) 
+                self.fitness[i] = func(self.data, feature)
+                break
+                
             break
-
 
 
     def sigmoid(self, x: np.ndarray, parms: List[int]):
