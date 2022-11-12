@@ -26,3 +26,21 @@ def func(data, inp):
 
         data_group.append(sa)
         smile_subsample_segments.append(smile_temp)
+
+    fit_temp = np.zeros((1, 10))
+
+    for i in range(k - 1):
+        data_ts = []
+        data_tr = []
+
+        for j in range(len(classes)):
+            smile_temp = smile_subsample_segments[j]
+            sa = data_group[j]
+            test = sa[int(smile_temp[i]): int(smile_temp[i + 1])] # current test smiles
+
+            data_ts = [test, data_ts]
+            
+            train = sa
+            train = np.delete(train, list(range(int(smile_temp[i]), int(smile_temp[i + 1]))), axis = 0)
+            print(sa[int(smile_temp[i]): int(smile_temp[i + 1])] == train[int(smile_temp[i]): int(smile_temp[i + 1])])
+            
