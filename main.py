@@ -37,6 +37,8 @@ class CSOFS:
         self.phi = 0.1
         self.results = np.zeros((1, self.runnum))
 
+        
+
     def run(self):
         for i in range(0, self.runnum):
             XRRmin = matlib.repmat(self.lu[0, :], self.m, 1)
@@ -56,9 +58,58 @@ class CSOFS:
             for i in range(0, self.m):
                 feature = [idx for idx in range(len(bi_position[i])) if bi_position[i][idx] == 1]
                 self.fitness[i] = func(self.data, feature)
-                break
                 
-            break
+            v = np.zeros((self.m, self.n))
+            bestever = 1e200
+
+            gen = 0
+
+            while gen < self.maxfe:
+                rlist = np.random.permutation(self.m).T
+                rpairs = np.vstack([rlist[0:int(np.ceil(self.m/2))], rlist[self.m//2: self.m]]).T
+
+                center = np.ones((int(np.ceil(self.m/2)), 1)) @ np.mean(p,axis=0).reshape(1, -1)
+
+                mask = self.fitness[rpairs[:,0]] > self.fitness[rpairs[:,1]]
+
+                losers = (np.multiply(mask, rpairs[:, 0]) + np.multiply(np.logical_not(mask), rpairs[:, 1])).T
+                winners = (np.multiply(np.logical_not(mask), rpairs[:, 0]) + np.multiply(mask, rpairs[:, 1])).T
+
+                randco1 = np.random.rand(int(np.ceil(self.m/2)), self.n);
+                randco2 = np.random.rand(int(np.ceil(self.m/2)), self.n);
+                randco3 = np.random.rand(int(np.ceil(self.m/2)), self.n);
+
+                x = np.multiply(randco1, v[losers])
+                y = np.multiply(randco2, p[winners] - p[losers]) + self.phi * np.multiply(randco3, (center - p[losers]))
+
+                v[losers] = x + y
+
+                p[losers] = p[losers] + v[losers]
+
+                for _ in range(0, int(np.ceil(self.m/2))):
+                    x = np.maximum(p[losers[_], :], self.lu[0, :])
+                    y = np.minimum(p[losers[_], :], self.lu[1, :])
+                    p[losers[_], :] = x
+                    p[losers[_], :] = y
+
+                # fitness evalutation
+                n_losers = len(losers)
+                for id in range(n_losers):
+                    pop[losers[id]] = self.sigmoid(p[losers[id]], [1, 0])
+                    randnu = np.random.rand(1, self.n)
+                    change_pos = (pop[losers[id]] > randnu)
+                    indices = np.where(change_pos == 1)
+
+
+                    self.fitness[losers[id]] = func(self.data, feature)
+                    
+                bestever = np.minimum(bestever, np.min(self.fitness))
+                print(f"Round {gen}: Best Fitness: {bestever:.10} Current Fitness: {np.min(self.fitness):.10}")
+
+                gen += 1
+
+
+
 
 
     def sigmoid(self, x: np.ndarray, parms: List[int]):

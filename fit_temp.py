@@ -24,20 +24,21 @@ def func(data, inp):
         
         number_of_smile_samples, _ = sa.shape
         smile_temp = np.round(np.linspace(1, number_of_smile_samples, k + 1))
+        smile_temp = [i - 1 for i in smile_temp]
 
         data_group.append(sa)
         smile_subsample_segments.append(smile_temp)
 
     fit_temp = np.zeros((1, 10))
 
-    for i in range(k - 1):
+    for i in range(k):
         data_tr = None
         data_ts = None
 
         for j in range(len(classes)):
             smile_temp = smile_subsample_segments[j]
             sa = data_group[j]
-            test = sa[int(smile_temp[i]) - 1: int(smile_temp[i + 1])] # current test smiles
+            test = sa[int(smile_temp[i]): int(smile_temp[i + 1]) + 1] # current test smiles
 
             if data_ts is None:
                 data_ts = test
@@ -45,7 +46,7 @@ def func(data, inp):
                 data_ts = np.vstack((test, data_ts))
             
             train = sa
-            train = np.delete(train, list(range(int(smile_temp[i]) - 1, int(smile_temp[i + 1]))), axis = 0)
+            train = np.delete(train, list(range(int(smile_temp[i]), int(smile_temp[i + 1] + 1))), axis = 0)
             
             if data_tr is None:
                 data_tr = train
@@ -60,7 +61,6 @@ def func(data, inp):
         mdl.fit(data_tr[:, inp], data_tr[:, -1])
 
         x = mdl.predict(data_ts[:, inp])
-        fit_temp[:, i] = np.sum([pred for pred in range(len(x)) if x[pred] != data_ts[:, i][pred]])
-        print(fit_temp)
-
+        fit_temp[:, i] = np.sum([x[pred] != data_ts[:, -1][pred] for pred in range(len(x))], axis = 0)
+        
     return np.mean(fit_temp, axis=1)
