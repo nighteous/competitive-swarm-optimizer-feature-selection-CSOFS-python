@@ -1,11 +1,14 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn import preprocessing
+from sklearn import utils
 
 """
 Implementation of func.m for calculating error for fitness
 """
 
 def func(data, inp):
+
     
     # if inp length not 0 then return 1 
     if len(inp) == 0:
@@ -16,6 +19,8 @@ def func(data, inp):
     classes = np.unique(group)
     data_group = []
     smile_subsample_segments = []
+
+    data[:,:-1] = (data[:,:-1] - data[:,:-1].mean()) / data[:,:-1].std() # standardizing all rows until -1
     
     for i in range(len(classes)):
 
@@ -30,6 +35,8 @@ def func(data, inp):
         smile_subsample_segments.append(smile_temp)
 
     fit_temp = np.zeros((1, 10))
+
+    mdl = KNeighborsClassifier(n_neighbors=4)
 
     for i in range(k):
         data_tr = None
@@ -57,10 +64,17 @@ def func(data, inp):
         # data_ts = np.array(data_ts)
         # data_tr = np.array(data_tr)
 
-        mdl = KNeighborsClassifier(n_neighbors=4)
-        mdl.fit(data_tr[:, inp], data_tr[:, -1])
+        # mdl = KNeighborsClassifier(n_neighbors=4)
 
-        x = mdl.predict(data_ts[:, inp])
-        fit_temp[:, i] = np.sum([x[pred] != data_ts[:, -1][pred] for pred in range(len(x))], axis = 0)
+        # data_tr = (data_tr - data_tr.mean()) / data_tr.std() # To standardize the train data?
+
+        train_data = data_tr[:, inp]
+
+
+        mdl.fit(train_data, data_tr[:, -1])
+
+        test_preds = mdl.predict(data_ts[:, inp])
+        fit_temp[:, i] = np.sum([test_preds[pred] != data_ts[:, -1][pred] for pred in range(len(test_preds))]) / (len(test_preds))
         
-    return np.mean(fit_temp, axis=1)
+    res = np.mean(fit_temp, axis=1)
+    return res

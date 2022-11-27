@@ -88,6 +88,7 @@ class CSOFS:
 
                 p[losers] = p[losers] + v[losers]
 
+                # This works finally
                 for _ in range(0, int(np.ceil(self.m/2))):
 
                     x = np.maximum(p[losers[:,0][_ - 1]], self.lu[0])
@@ -101,14 +102,23 @@ class CSOFS:
 
                 # fitness evalutation
                 n_losers = len(losers[:,0])
-                for id in range(n_losers):
-                    pop[losers[:,0][id - 1]] = self.sigmoid(p[losers[:,0][id - 1]], [1, 0])
-                    randnu = np.random.rand(0, self.n)
-                    change_pos = (pop[losers[:,0][id - 1]] > randnu)
-                    indices = np.where(change_pos == 1)
+                for id in range(n_losers): 
+                    f = self.sigmoid(p[losers[:,0][id]], [1, 0])
+                    row = losers[:,0][id]
+                    pop[row] = f
+                    randnu = np.random.rand(self.n)
+                    # change_pos = [True if pop[i] > randnu else False for i in range(len(pop[row]))]
+                    change_pos = []
+                    for i in range(len(pop[row])):
+                        if pop[row][i] > randnu[i]:
+                            change_pos.append(True)
+                        else:
+                            change_pos.append(False)
+                    
+                    indices = [i for i in range(len(change_pos)) if change_pos[i]]
 
 
-                    self.fitness[losers[:,0][id - 1]] = func(self.data, feature)
+                    self.fitness[row] = func(self.data, indices)
 
                 bestever = np.minimum(bestever, np.min(self.fitness))
                 print(f"Round {gen}: Best Fitness: {bestever} Current Fitness: {np.min(self.fitness)}")
